@@ -84,14 +84,6 @@ All endpoints return `application/json`.
 
 ---
 
-### `GET /`
-
-Serves the main UI.
-
-- **Response** `200` — static HTML page
-
----
-
 ### `GET /api/health`
 
 Liveness check.
