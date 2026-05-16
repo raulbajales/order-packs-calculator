@@ -1,0 +1,12 @@
+-- +goose Up
+CREATE TABLE IF NOT EXISTS packs (
+    id         SERIAL PRIMARY KEY,
+    size       INTEGER NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO packs (size) VALUES (250), (500), (1000), (2000), (5000)
+ON CONFLICT DO NOTHING;
+
+-- +goose Down
+DROP TABLE IF EXISTS packs;

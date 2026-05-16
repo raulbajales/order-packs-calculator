@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Packs Calculator</title>
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="container">
+
+  <h1>Order Packs Calculator</h1>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="packs">Pack Sizes</button>
+    <button class="tab-btn" data-tab="calculator">Calculator</button>
+  </div>
+
+  <div id="tab-packs" class="tab-panel">
+    <div class="card">
+      <h2>Pack Sizes</h2>
+      <div class="row">
+        <input
+          id="sizes-input"
+          type="text"
+          placeholder="e.g. 250, 500, 1000, 2000, 5000"
+          class="input-wide"
+        >
+        <button id="save-btn" class="btn">Save</button>
+      </div>
+      <p class="hint">Comma-separated positive integers.</p>
+    </div>
+  </div>
+
+  <div id="tab-calculator" class="tab-panel" style="display:none">
+    <div class="card">
+      <h2>Calculate Order</h2>
+      <div class="row">
+        <input
+          id="qty"
+          type="number"
+          placeholder="Order quantity"
+          min="1"
+          class="input-qty"
+        >
+        <button id="calc-btn" class="btn btn-primary">Calculate</button>
+      </div>
+    </div>
+
+    <div id="result-card" class="card" style="display:none">
+      <h2>Result for order of <strong id="result-qty"></strong> items</h2>
+      <table>
+        <thead>
+          <tr><th>Packs</th><th>Pack Size</th><th>Items</th></tr>
+        </thead>
+        <tbody id="result-body"></tbody>
+        <tfoot id="result-foot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).style.display = '';
+    });
+  });
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast toast-' + type + ' toast-show';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.className = 'toast', 2500);
+  }
+
+  async function loadPackSizes() {
+    try {
+      const res = await fetch('/api/packs');
+      const data = await res.json();
+      if (res.ok && data.sizes && data.sizes.length > 0) {
+        document.getElementById('sizes-input').value = data.sizes.join(', ');
+      }
+    } catch {
+      showToast('server unreachable', 'error');
+      return;
+    }
+  }
+  loadPackSizes();
+
+  document.getElementById('save-btn').addEventListener('click', async () => {
+    const sizes = document.getElementById('sizes-input').value.trim();
+    if (!sizes) {
+      showToast('Enter at least one pack size', 'error');
+      return;
+    }
+
+    let res, data;
+    try {
+      res = await fetch('/api/packs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sizes }),
+      });
+      data = await res.json();
+    } catch {
+      showToast('server unreachable', 'error');
+      return;
+    }
+
+    if (!res.ok) {
+      showToast(data.error || 'Failed to save pack sizes', 'error');
+      return;
+    }
+
+    showToast('Pack sizes saved successfully');
+  });
+
+  document.getElementById('calc-btn').addEventListener('click', async () => {
+    const qty = document.getElementById('qty').value.trim();
+    if (!qty || parseInt(qty, 10) <= 0) {
+      showToast('Order quantity must be a positive integer', 'error');
+      return;
+    }
+
+    const res = await fetch('/api/calculate?amount=' + encodeURIComponent(qty));
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast('Error: ' + (data.error || res.statusText), 'error');
+      return;
+    }
+
+    const entries = Object.entries(data).map(([size, count]) => ({
+      size: parseInt(size, 10),
+      count,
+      items: parseInt(size, 10) * count,
+    })).sort((a, b) => b.size - a.size);
+
+    const total = entries.reduce((s, e) => s + e.items, 0);
+    const excess = total - parseInt(qty, 10);
+
+    document.getElementById('result-qty').textContent = parseInt(qty, 10).toLocaleString();
+    document.getElementById('result-body').innerHTML = entries.map(e =>
+      `<tr><td>${e.count}</td><td>&times; ${e.size}</td><td>${e.items.toLocaleString()}</td></tr>`
+    ).join('');
+    document.getElementById('result-foot').innerHTML =
+      `<tr><td colspan="2"><strong>Total shipped</strong></td><td><strong>${total.toLocaleString()}</strong></td></tr>` +
+      `<tr><td colspan="2">Excess items</td><td>${excess}</td></tr>`;
+    document.getElementById('result-card').style.display = '';
+  });
+</script>
+</body>
+</html>
