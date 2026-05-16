@@ -98,6 +98,8 @@ Then open <http://localhost:8080>.
 
 (Migrations run automatically at startup)
 
+The app is also deployed in Fly.io on a free tier (which involves some cold starts that may make the REST API or DB temporarily unavailable) reachable here: https://order-packs-calculator-raul.fly.dev/
+
 ---
 
 ## Local setup
@@ -170,6 +172,11 @@ Liveness check.
 
 - **Response** `200` — `{"status":"ok"}`
 
+```
+» curl 'https://order-packs-calculator-raul.fly.dev/api/health'
+{"status":"ok"}
+```
+
 ---
 
 ### `GET /api/packs`
@@ -178,6 +185,11 @@ Returns all configured pack sizes in descending order.
 
 - **Response** `200` — `{"sizes":[5000,2000,1000,500,250]}`
 - **Response** `500` — `{"error":"..."}` — database error
+
+```
+» curl 'https://order-packs-calculator-raul.fly.dev/api/packs'
+{"sizes":[53,31,23]}
+```
 
 ---
 
@@ -194,6 +206,11 @@ Replaces all pack sizes atomically.
   - empty input
 - **Response** `500` — `{"error":"..."}` — database error
 
+```
+» curl 'https://order-packs-calculator-raul.fly.dev/api/packs' --data-raw '{"sizes":"53, 31, 23"}'
+{"ok":true}
+```
+
 ---
 
 ### `GET /api/calculate`
@@ -206,6 +223,11 @@ Returns the optimal pack distribution for a given order quantity.
 - **Response** `400` — `{"error":"..."}` — missing or invalid `amount`
 - **Response** `422` — `{"error":"..."}` — no valid pack combination found
 - **Response** `500` — `{"error":"..."}` — database error
+
+```
+» curl 'https://order-packs-calculator-raul.fly.dev/api/calculate?amount=500000'
+{"53":9429,"31":7,"23":2}
+```
 
 ---
 
