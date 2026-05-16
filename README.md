@@ -8,6 +8,86 @@ Given a set of pack sizes and an order quantity, the app calculates the optimal 
 
 ---
 
+## TOC
+
+- [Diagrams](#diagrams)
+- [Quick start](#quick-start-docker)
+- [Local setup](#local-setup)
+- [Make targets](#make-targets)
+- [Project folder structure](#project-folder-structure)
+- [API](#api)
+- [Algorithm](#algorithm)
+- [Env vars](#env-vars)
+
+---
+
+## Diagrams
+
+### Components
+
+```mermaid
+graph LR
+    FE["Frontend"]
+    API["REST API"]
+    DB["PostgreSQL"]
+
+    FE -->|HTTP Requests| API
+    API -->|SQL Queries| DB
+    DB -->|Query Results| API
+    API -->|JSON Response| FE
+```
+
+### Workflows
+
+#### 1. Read Packs (on page load)
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend
+    participant API as REST API
+    participant DB as PostgreSQL
+
+    FE->>API: GET /api/packs
+    API->>DB: SELECT sizes FROM packs
+    DB-->>API: [5000, 2000, 1000, 500, 250]
+    API-->>FE: {"sizes": [...]}
+    FE->>FE: Render pack list
+```
+
+#### 2. Store/Update Packs
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend
+    participant API as REST API
+    participant DB as PostgreSQL
+
+    FE->>API: POST /api/packs
+    API->>API: Validate input
+    API->>DB: Uopdate packs
+    DB-->>API: OK
+    API-->>FE: {"ok": true}
+    FE->>FE: Update UI
+```
+
+#### 3. Calculate Optimal Distribution
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend
+    participant API as REST API
+    participant DB as PostgreSQL
+
+    FE->>API: GET /api/calculate?amount=1500
+    API->>DB: SELECT sizes FROM packs
+    DB-->>API: [5000, 2000, 1000, 500, 250]
+    API->>API: Algorithm to find distribution
+    API-->>FE: {"5000": 0, "2000": 1, "1000": 0, ...}
+    FE->>FE: Render result
+```
+
+---
+
 ## Quick start (Docker)
 
 ```bash
