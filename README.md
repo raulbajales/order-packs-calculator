@@ -98,7 +98,7 @@ Then open <http://localhost:8080>.
 
 (Migrations run automatically at startup)
 
-The app is also deployed in Fly.io on a free tier (which involves some cold starts that may make the REST API or DB temporarily unavailable) reachable here: https://order-packs-calculator-raul.fly.dev/
+The app is also deployed in Railway on a free tier (which involves some cold starts that may make the REST API or DB temporarily unavailable) reachable here: https://app-production-f675.up.railway.app/
 
 ---
 
@@ -173,7 +173,7 @@ Liveness check.
 - **Response** `200` — `{"status":"ok"}`
 
 ```
-» curl 'https://order-packs-calculator-raul.fly.dev/api/health'
+» curl 'https://app-production-f675.up.railway.app/api/health'
 {"status":"ok"}
 ```
 
@@ -187,7 +187,7 @@ Returns all configured pack sizes in descending order.
 - **Response** `500` — `{"error":"..."}` — database error
 
 ```
-» curl 'https://order-packs-calculator-raul.fly.dev/api/packs'
+» curl 'https://app-production-f675.up.railway.app/api/packs'
 {"sizes":[53,31,23]}
 ```
 
@@ -207,7 +207,7 @@ Replaces all pack sizes atomically.
 - **Response** `500` — `{"error":"..."}` — database error
 
 ```
-» curl 'https://order-packs-calculator-raul.fly.dev/api/packs' --data-raw '{"sizes":"53, 31, 23"}'
+» curl 'https://app-production-f675.up.railway.app/api/packs' --data-raw '{"sizes":"53, 31, 23"}'
 {"ok":true}
 ```
 
@@ -225,7 +225,7 @@ Returns the optimal pack distribution for a given order quantity.
 - **Response** `500` — `{"error":"..."}` — database error
 
 ```
-» curl 'https://order-packs-calculator-raul.fly.dev/api/calculate?amount=500000'
+» curl 'https://app-production-f675.up.railway.app/api/calculate?amount=500000'
 {"53":9429,"31":7,"23":2}
 ```
 
