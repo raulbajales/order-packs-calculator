@@ -11,7 +11,7 @@ Given a set of pack sizes and an order quantity, the app calculates the optimal 
 ## Quick start (Docker)
 
 ```bash
-docker-compose up --build
+make docker-up
 ```
 
 Then open <http://localhost:8080>.
@@ -27,15 +27,13 @@ Then open <http://localhost:8080>.
 - Go 1.25+
 - PostgreSQL 14+
 
-
 Open <http://localhost:8080>.
-
 
 ## Make targets
 
 - `make run` — start the development server (uses `DB_URL`)
 - `make build` — compile the binary to `./bin/web`
-- `make test` — run unit tests 
+- `make test` — run unit tests
 - `make integration-test` — run all tests including handler integration tests
   - requires Postgres, you can run `make docker-up`
 - `make docker-up` — build and start the app + Postgres via docker-compose (detached)
@@ -87,28 +85,36 @@ All endpoints return `application/json`.
 ---
 
 ### `GET /`
+
 Serves the main UI.
+
 - **Response** `200` — static HTML page
 
 ---
 
 ### `GET /api/health`
+
 Liveness check.
+
 - **Response** `200` — `{"status":"ok"}`
 
 ---
 
 ### `GET /api/packs`
+
 Returns all configured pack sizes in descending order.
+
 - **Response** `200` — `{"sizes":[5000,2000,1000,500,250]}`
 - **Response** `500` — `{"error":"..."}` — database error
 
 ---
 
 ### `POST /api/packs`
+
 Replaces all pack sizes atomically.
+
 - **Request body** `application/json`
-  - `sizes` *(string, required)* — comma-separated positive integers, e.g. `"250,500,1000"`
+  - `sizes` _(string, required)_ — comma-separated positive integers, e.g. `"250,500,1000"`
 - **Response** `200` — `{"ok":true}`
 - **Response** `400` — `{"error":"..."}` — invalid JSON or validation failure
   - non-numeric token
@@ -119,9 +125,11 @@ Replaces all pack sizes atomically.
 ---
 
 ### `GET /api/calculate`
+
 Returns the optimal pack distribution for a given order quantity.
+
 - **Query params**
-  - `amount` *(integer, required)* — order quantity, must be a positive integer ≤ 1,000,000
+  - `amount` _(integer, required)_ — order quantity, must be a positive integer ≤ 1,000,000
 - **Response** `200` — `{"<packSize>": <quantity>, …}` — keys are pack sizes as strings
 - **Response** `400` — `{"error":"..."}` — missing or invalid `amount`
 - **Response** `422` — `{"error":"..."}` — no valid pack combination found
@@ -144,6 +152,6 @@ Complexity: O((order + minPackSize) × numSizes) time
 
 ## Env vars
 
-- `PORT` — HTTP server port *(default: `8080`)*
-- `DATABASE_URL` — PostgreSQL connection string *(default: `postgres://postgres:postgres@localhost:5432/challenge?sslmode=disable`)*
-- `WEB_DIR` — path to the directory containing `index.html` and `app.css` *(default: `./web`)*
+- `PORT` — HTTP server port _(default: `8080`)_
+- `DATABASE_URL` — PostgreSQL connection string _(default: `postgres://postgres:postgres@localhost:5432/challenge?sslmode=disable`)_
+- `WEB_DIR` — path to the directory containing `index.html` and `app.css` _(default: `./web`)_
